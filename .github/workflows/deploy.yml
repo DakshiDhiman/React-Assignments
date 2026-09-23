@@ -1,0 +1,96 @@
+name: Deploy React assignments to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build latest
+        working-directory: latest
+        run: |
+          npm ci
+          npm run build -- --base=/React-Assignments/latest/
+
+      - name: Build react1
+        working-directory: react1
+        run: |
+          npm ci
+          npm run build -- --base=/React-Assignments/react1/
+
+      - name: Build react3
+        working-directory: react3
+        run: |
+          npm ci
+          npm run build -- --base=/React-Assignments/react3/
+
+      - name: Prepare site
+        run: |
+          mkdir -p site/latest site/react1 site/react3
+          cp -r latest/dist/. site/latest/
+          cp -r react1/dist/. site/react1/
+          cp -r react3/dist/. site/react3/
+          cp Tailwind.html site/Tailwind.html
+
+          cat > site/index.html <<'EOF'
+          <!doctype html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>React Assignments</title>
+          </head>
+          <body>
+            <h1>React Assignments</h1>
+            <ul>
+              <li><a href="./latest/">Latest</a></li>
+              <li><a href="./react1/">React 1</a></li>
+              <li><a href="./react3/">React 3</a></li>
+              <li><a href="./Tailwind.html">Tailwind</a></li>
+            </ul>
+          </body>
+          </html>
+          EOF
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
