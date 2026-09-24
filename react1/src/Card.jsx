@@ -1,6 +1,6 @@
 import "./Card.css"
 import Price from "./Price"
-import Laptop from "./assets/Laptop.jpg"
+import Laptop from "./assets/laptop.jpg"
 import Mobile from "./assets/mobile.avif"
 import Ps5 from "./assets/ps5.webp"
 import Fitbit from "./assets/fitbit.jpg"
